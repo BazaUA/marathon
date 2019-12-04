@@ -1,5 +1,7 @@
 package com.bazalytskyi.coursework.controllers;
 
+import com.bazalytskyi.coursework.dto.MarathonDTO;
+import com.bazalytskyi.coursework.dto.PostDTO;
 import com.bazalytskyi.coursework.dto.UserDto;
 import com.bazalytskyi.coursework.entities.CustomUserDetails;
 import com.bazalytskyi.coursework.entities.UserEntity;
@@ -12,38 +14,39 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static com.bazalytskyi.coursework.auth.TokenHandler.EXPIRATION_TIME;
 
 @RestController
 public class UserController {
     @Autowired
     TokenAuthenticationService tokenAuthenticationService;
-
-
     @Autowired
     UserService userService;
 
-
-    @PutMapping(value = "/signup", produces = "application/json")
-    public ResponseEntity<Void> registerNewUserAccount(@RequestBody UserDto accountDto) {
+    @PostMapping(value = "/signup", produces = "application/json")
+    public ResponseEntity<Boolean> registerNewUserAccount(@RequestBody UserDto accountDto) {
         UserEntity flag = userService.registerNewUserAccount(accountDto);
         if (flag == null) {
-            return new ResponseEntity<Void>(HttpStatus.CONFLICT);
+            return new ResponseEntity<Boolean>(Boolean.FALSE, HttpStatus.CONFLICT);
         }
-        return new ResponseEntity<Void>(HttpStatus.CREATED);
+        return new ResponseEntity<Boolean>(Boolean.TRUE, HttpStatus.CREATED);
     }
 
 
     @PostMapping(value = "/signin", produces = "application/json")
-    public HttpEntity<Map> login(HttpServletResponse response, @RequestParam String username, @RequestParam String password) {
-        String encodePass = new String(Base64.getDecoder().decode(password));
-        UserEntity userEntity = userService.getUserByLoginAndPassword(  username, encodePass);
+    public HttpEntity<Map> login(HttpServletResponse response, @RequestBody Map<String, String> body) {
+        String password = body.get("password");
+        String username = body.get("username");
+        UserEntity userEntity = userService.getUserByLoginAndPassword(username, password);
         Map<String, Object> result = new HashMap<String, Object>();
         if (userEntity == null) {
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
@@ -51,6 +54,7 @@ public class UserController {
             CustomUserDetails user = new CustomUserDetails(userEntity);
             String token = tokenAuthenticationService.addAuthentication(response, user);
             result.put("token", token);
+            result.put("expiration", EXPIRATION_TIME);
             return new HttpEntity(result);
         }
     }
@@ -73,5 +77,19 @@ public class UserController {
         } catch (ClassCastException ex) {
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    @GetMapping(value = "/user/marathons", produces = "application/json")
+    public List<MarathonDTO> getUserMarathon() {
+        UserDetails details = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        UserEntity user = userService.getUserByUsername(details.getUsername());
+        return userService.getUserMarathons(user.getId());
+    }
+
+    @GetMapping(value = "/user/posts", produces = "application/json")
+    public List<PostDTO> getUserPostMarathon() {
+        UserDetails details = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        UserEntity user = userService.getUserByUsername(details.getUsername());
+        return userService.getUserPosts(user.getId());
     }
 }

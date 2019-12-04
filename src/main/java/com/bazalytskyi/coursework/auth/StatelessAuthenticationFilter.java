@@ -31,7 +31,7 @@ public class StatelessAuthenticationFilter extends GenericFilterBean {
         String authToken = httpServletRequest.getHeader(AUTHORIZATION);
         if(authToken != null) {
             authToken = new String(authToken.substring(BEGIN_INDEX).getBytes(), "UTF-8");
-            Authentication authentication = tokenAuthenticationService.getAuthentication(httpServletRequest, httpServletResponse,authToken);
+            Authentication authentication = tokenAuthenticationService.getAuthentication(httpServletRequest, httpServletResponse, authToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         filterChain.doFilter(request, response);

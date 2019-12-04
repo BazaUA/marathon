@@ -4,6 +4,8 @@ package com.bazalytskyi.coursework.entities;
 
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -15,13 +17,15 @@ public class UserEntity {
     private String username;
     private String password;
     private String email;
-
+    private boolean enabled;
+    private boolean tokenExpired;
+    @ManyToMany
+    private List<MarathonEntity> marathons = new ArrayList<>();
+    @OneToMany(mappedBy = "user")
+    private List<PostEntity> posts = new ArrayList<>();
     @ManyToOne
     @JoinColumn(name = "role_fk")
     private RoleEntity role;
-
-    private boolean enabled;
-    private boolean tokenExpired;
 
     public Long getId() {
         return id;
@@ -79,6 +83,22 @@ public class UserEntity {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public List<MarathonEntity> getMarathons() {
+        return marathons;
+    }
+
+    public void setMarathons(List<MarathonEntity> marathons) {
+        this.marathons = marathons;
+    }
+
+    public List<PostEntity> getPosts() {
+        return posts;
+    }
+
+    public void setPosts(List<PostEntity> posts) {
+        this.posts = posts;
     }
 
     @Override

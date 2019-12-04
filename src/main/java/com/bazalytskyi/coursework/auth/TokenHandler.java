@@ -5,7 +5,6 @@ import com.bazalytskyi.coursework.entities.CustomUserDetails;
 import com.bazalytskyi.coursework.services.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -14,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class TokenHandler {
-    @Autowired
+    public static Long EXPIRATION_TIME = TimeUnit.DAYS.toMillis(1L);
     private UserService userService;
     private String USER = "user_id";
     private String ROLES = "roles";
@@ -29,7 +28,7 @@ public class TokenHandler {
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + TimeUnit.MINUTES.toMillis(10L)))
+                .setExpiration(new Date(now.getTime() + EXPIRATION_TIME))
                 .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, key)
                 .compact();
     }

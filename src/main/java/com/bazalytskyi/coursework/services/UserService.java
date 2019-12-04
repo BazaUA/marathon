@@ -1,66 +1,82 @@
 package com.bazalytskyi.coursework.services;
 
-import com.bazalytskyi.coursework.dao.IRoleDAO;
-import com.bazalytskyi.coursework.dao.IUserDAO;
-import com.bazalytskyi.coursework.entities.CustomUserDetails;
+import com.bazalytskyi.coursework.dto.MarathonDTO;
+import com.bazalytskyi.coursework.dto.PostDTO;
+import com.bazalytskyi.coursework.repository.PostRepository;
+import com.bazalytskyi.coursework.repository.RoleRepository;
+import com.bazalytskyi.coursework.repository.UserRepository;
 import com.bazalytskyi.coursework.dto.UserDto;
+import com.bazalytskyi.coursework.entities.CustomUserDetails;
+import com.bazalytskyi.coursework.entities.RoleEntity;
 import com.bazalytskyi.coursework.entities.UserEntity;
+import com.bazalytskyi.coursework.transformer.MarathonTransformer;
+import com.bazalytskyi.coursework.transformer.PostTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-@Service
-public class UserService implements IUserService {
-    @Autowired
-    IUserDAO userDao;
+import java.util.List;
 
+@Service
+public class UserService {
     @Autowired
     PasswordEncoder passwordEncoder;
-
     @Autowired
-    IUserDAO userDAO;
-
+    UserRepository userRepository;
     @Autowired
-    IRoleDAO roleDAO;
+    RoleRepository roleRepository;
+    @Autowired
+    private MarathonTransformer marathonTransformer;
+    @Autowired
+    private PostRepository postRepository;
+    @Autowired
+    private PostTransformer postTransformer;
 
 
-    @Override
     public UserEntity registerNewUserAccount(UserDto accountDto){
         UserEntity user = new UserEntity();
-
         user.setUsername(accountDto.getUsername());
-
         user.setPassword(passwordEncoder.encode(accountDto.getPassword()));
         user.setEmail(accountDto.getEmail());
-        user.setRole(roleDAO.findByName(accountDto.getRole()));
-        return userDAO.save(user);
+        RoleEntity role_user = roleRepository.findByName("ROLE_USER");
+        user.setRole(role_user);
+        return userRepository.save(user);
     }
 
-    @Override
     public CustomUserDetails loadUserByUsername(String username) {
-        UserEntity userEntity = userDAO.findByUsername(username);
+        UserEntity userEntity = userRepository.findByUsername(username);
         CustomUserDetails user = new CustomUserDetails(userEntity);
         return user;
     }
 
-    @Override
     public UserEntity getUserByUsername(String username) {
-        UserEntity userEntity = userDAO.findByUsername(username);
+        UserEntity userEntity = userRepository.findByUsername(username);
 
         return userEntity;
     }
 
-    @Override
     public UserEntity getUserById(long id){
-        return userDAO.getOne(id);
+        return userRepository.getOne(id);
     }
 
-    @Override
-    public UserEntity getUserByLoginAndPassword(String username, String existingPassword) {
-       UserEntity userEntity= userDAO.findByUsername(username);
-       if(userEntity!=null&&passwordEncoder.matches(existingPassword,userEntity.getPassword()))
-           return userEntity;
-       else
-           return null;
+    public UserEntity  getUserByLoginAndPassword(String username, String existingPassword) {
+        UserEntity userEntity = userRepository.findByUsername(username);
+        if (userEntity != null && passwordEncoder.matches(existingPassword, userEntity.getPassword())) {
+            return userEntity;
+        } else {
+            return null;
+        }
+    }
+
+    public List<MarathonDTO> getUserMarathons(Long userId) {
+        UserEntity userEntity = userRepository.findOne(userId);
+        if (userEntity == null) {
+            return null;
+        }
+        return marathonTransformer.toDtoList(userEntity.getMarathons());
+    }
+
+    public List<PostDTO> getUserPosts(Long userId) {
+        return postTransformer.toDtoList(postRepository.findAllByUserId(userId));
     }
 }
