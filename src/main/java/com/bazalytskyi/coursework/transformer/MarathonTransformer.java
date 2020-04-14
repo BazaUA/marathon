@@ -2,6 +2,8 @@ package com.bazalytskyi.coursework.transformer;
 
 import com.bazalytskyi.coursework.dto.MarathonDTO;
 import com.bazalytskyi.coursework.entities.MarathonEntity;
+import com.bazalytskyi.coursework.services.SecurityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,6 +11,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class MarathonTransformer {
+    @Autowired
+    private SecurityUtils securityUtils;
 
     public MarathonEntity toEntity(MarathonDTO dto) {
         MarathonEntity entity = new MarathonEntity();
@@ -33,6 +37,7 @@ public class MarathonTransformer {
         dto.setPrice(entity.getPrice());
         dto.setStart_date(entity.getStartDate());
         dto.setWinner(entity.getWinner());
+        dto.setEnrolled(entity.getUsers().contains(securityUtils.getUser()));
         return dto;
     }
 
@@ -47,7 +52,7 @@ public class MarathonTransformer {
         entity.setDescription(dto.getDescription());
         entity.setEndDate(dto.getEnd_dat());
         entity.setFinished(dto.isFinished());
-        entity.setHostId(dto.getHost_id());
+        entity.setHostId(securityUtils.getUser().getId());
         entity.setName(dto.getName());
         entity.setPrice(dto.getPrice());
         entity.setStartDate(dto.getStart_date());

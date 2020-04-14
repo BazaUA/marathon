@@ -79,4 +79,12 @@ public class UserService {
     public List<PostDTO> getUserPosts(Long userId) {
         return postTransformer.toDtoList(postRepository.findAllByUserId(userId));
     }
+
+    public List<UserEntity> getEnrolledUserByMarathonId(Long id) {
+        return userRepository.findAllByMarathonId(id);
+    }
+
+    public void delete(List<UserEntity> users) {
+        userRepository.delete(users);
+    }
 }

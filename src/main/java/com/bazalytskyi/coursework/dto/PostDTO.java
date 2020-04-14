@@ -5,6 +5,24 @@ public class PostDTO {
     private String text;
     private long marathon_id;
     private long user_id;
+    private Long created_date;
+    private String marathon_name;
+
+    public String getMarathon_name() {
+        return marathon_name;
+    }
+
+    public void setMarathon_name(String marathon_name) {
+        this.marathon_name = marathon_name;
+    }
+
+    public Long getCreated_date() {
+        return created_date;
+    }
+
+    public void setCreated_date(Long created_date) {
+        this.created_date = created_date;
+    }
 
     public long getId() {
         return id;

@@ -3,6 +3,7 @@ package com.bazalytskyi.coursework.services;
 import com.bazalytskyi.coursework.dto.MarathonDTO;
 import com.bazalytskyi.coursework.dto.PostDTO;
 import com.bazalytskyi.coursework.entities.MarathonEntity;
+import com.bazalytskyi.coursework.entities.PostEntity;
 import com.bazalytskyi.coursework.entities.UserEntity;
 import com.bazalytskyi.coursework.repository.MarathonRepository;
 import com.bazalytskyi.coursework.repository.PostRepository;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -27,6 +29,8 @@ public class MarathonService {
     private PostRepository postRepository;
     @Autowired
     private PostTransformer postTransformer;
+    @Autowired
+    private SecurityUtils securityUtils;
 
     public List<MarathonDTO> getAll() {
         return marathonTransformer.toDtoList(marathonRepository.findAll());
@@ -48,6 +52,14 @@ public class MarathonService {
     }
 
     public void deleteById(long id) {
+        MarathonEntity marathonEntity = marathonRepository.findOne(id);
+        List<PostEntity> allByMarathonId = postRepository.findAllByMarathonIdOrderByCreatedDateDesc(marathonEntity.getId());
+        postRepository.delete(allByMarathonId);
+        postRepository.flush();
+        userService.getEnrolledUserByMarathonId(marathonEntity.getId()).stream()
+            .peek(userEntity -> userEntity.getMarathons());
+        marathonRepository.saveAndFlush(marathonEntity);
+
         marathonRepository.delete(id);
     }
 
@@ -59,6 +71,25 @@ public class MarathonService {
     }
 
     public List<PostDTO> getMarathonPosts(Long id) {
-        return postTransformer.toDtoList(postRepository.findAllByMarathonId(id));
+        return postTransformer.toDtoList(postRepository.findAllByMarathonIdOrderByCreatedDateDesc(id));
+    }
+
+    public void excludeUser(Long marathonId, Long userId) {
+        MarathonEntity marathonEntity = marathonRepository.findOne(marathonId);
+        UserEntity userEntity = userService.getUserById(userId);
+
+        marathonEntity.setUsers(marathonEntity.getUsers().stream()
+                .filter(user -> !user.getId().equals(userId))
+                .collect(Collectors.toList())
+        );
+        userEntity.setMarathons(userEntity.getMarathons().stream()
+            .filter(marathon -> marathon.getId() != marathonId)
+            .collect(Collectors.toList())
+        );
+    }
+
+    public List<MarathonEntity> getMarathonByUserOwner() {
+        UserEntity user = securityUtils.getUser();
+        return marathonRepository.getAllByHostId(user.getId());
     }
 }

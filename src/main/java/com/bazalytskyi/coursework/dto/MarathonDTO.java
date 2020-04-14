@@ -14,6 +14,15 @@ public class MarathonDTO {
     private long attendancies_count;
     private long attendancies_max_count;
     private boolean archive;
+    private boolean enrolled;
+
+    public boolean isEnrolled() {
+        return enrolled;
+    }
+
+    public void setEnrolled(boolean enrolled) {
+        this.enrolled = enrolled;
+    }
 
     public long getId() {
         return id;

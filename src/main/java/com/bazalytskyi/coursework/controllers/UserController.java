@@ -7,6 +7,7 @@ import com.bazalytskyi.coursework.entities.CustomUserDetails;
 import com.bazalytskyi.coursework.entities.UserEntity;
 import com.bazalytskyi.coursework.services.TokenAuthenticationService;
 import com.bazalytskyi.coursework.services.UserService;
+import com.bazalytskyi.coursework.transformer.UserTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.bazalytskyi.coursework.auth.TokenHandler.EXPIRATION_TIME;
 
@@ -31,6 +33,8 @@ public class UserController {
     TokenAuthenticationService tokenAuthenticationService;
     @Autowired
     UserService userService;
+    @Autowired
+    UserTransformer userTransformer;
 
     @PostMapping(value = "/signup", produces = "application/json")
     public ResponseEntity<Boolean> registerNewUserAccount(@RequestBody UserDto accountDto) {
@@ -91,5 +95,12 @@ public class UserController {
         UserDetails details = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
         UserEntity user = userService.getUserByUsername(details.getUsername());
         return userService.getUserPosts(user.getId());
+    }
+
+    @GetMapping(value = "/marathon/{id}/enrolledUsers", produces = "application/json")
+    public List<UserDto> getMarathonEnrolledUser(@PathVariable Long id) {
+        return userService.getEnrolledUserByMarathonId(id).stream()
+                .map(userTransformer::toDto)
+                .collect(Collectors.toList());
     }
 }

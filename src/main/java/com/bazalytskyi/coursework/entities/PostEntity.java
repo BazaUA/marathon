@@ -10,6 +10,7 @@ public class PostEntity {
     @GeneratedValue
     private long id;
     private String text;
+    private Long createdDate;
     @ManyToOne
     private MarathonEntity marathon;
     @ManyToOne
@@ -47,13 +48,20 @@ public class PostEntity {
         this.user = user;
     }
 
+    public Long getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Long createdDate) {
+        this.createdDate = createdDate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PostEntity that = (PostEntity) o;
-        return id == that.id &&
-                Objects.equals(text, that.text);
+        return id == that.id;
     }
 
     @Override

@@ -27,6 +27,13 @@ public class MarathonEntity {
     @OneToMany
     private List<PostEntity> posts = new ArrayList<>();
 
+    @PreRemove
+    private void removeMarathonFromUsers() {
+        for (UserEntity u : users) {
+            u.getMarathons().remove(this);
+        }
+    }
+
     public long getId() {
         return id;
     }

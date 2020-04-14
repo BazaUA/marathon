@@ -4,9 +4,12 @@ import com.bazalytskyi.coursework.dto.PostDTO;
 import com.bazalytskyi.coursework.entities.PostEntity;
 import com.bazalytskyi.coursework.repository.MarathonRepository;
 import com.bazalytskyi.coursework.repository.UserRepository;
+import com.bazalytskyi.coursework.services.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +19,8 @@ public class PostTransformer {
     private MarathonRepository marathonRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private SecurityUtils securityUtils;
 
     public PostEntity toEntity(PostDTO dto) {
         PostEntity entity = new PostEntity();
@@ -30,6 +35,9 @@ public class PostTransformer {
         dto.setId(entity.getId());
         dto.setText(entity.getText());
         dto.setMarathon_id(entity.getMarathon() == null ? 0 : entity.getMarathon().getId());
+        dto.setMarathon_name(entity.getMarathon() == null ? null : entity.getMarathon().getName());
+        dto.setUser_id(entity.getUser().getId());
+        dto.setCreated_date(entity.getCreatedDate());
         return dto;
     }
 
@@ -40,7 +48,8 @@ public class PostTransformer {
         entity.setId(dto.getId());
         entity.setText(dto.getText());
         entity.setMarathon(marathonRepository.findOne(dto.getMarathon_id()));
-        entity.setUser(userRepository.findOne(dto.getUser_id()));
+        entity.setUser(securityUtils.getUser());
+        entity.setCreatedDate(LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond());
         return entity;
     }
 
